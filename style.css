@@ -206,12 +206,14 @@ a:hover { text-decoration: underline; }
 .btn:hover { text-decoration: none; transform: translateY(-2px); }
 
 .btn-primary {
-  background: var(--ramp);
-  background-size: 150% 100%;
+  background: var(--accent);
   color: #ffffff;
   box-shadow: 0 6px 22px rgba(43, 142, 163, 0.32);
 }
-.btn-primary:hover { box-shadow: 0 10px 30px rgba(43, 142, 163, 0.42); }
+.btn-primary:hover {
+  background: #23778a;
+  box-shadow: 0 10px 30px rgba(43, 142, 163, 0.42);
+}
 
 .btn-ghost {
   border: 1px solid var(--line-strong);
