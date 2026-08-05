@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#79b4ec"/>
+      <stop offset="1" stop-color="#c8e6f7"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4aa5e8"/>
+      <stop offset="1" stop-color="#2d7fd1"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="128" height="128" fill="url(#sky)"/>
+  <rect y="104" width="128" height="24" fill="url(#water)"/>
+
+  <g fill="#ffffff" stroke="#e6eef6" stroke-width="1">
+    <rect x="14" y="26" width="14" height="12"/>
+    <rect x="28" y="20" width="18" height="12"/>
+    <rect x="46" y="26" width="12" height="12"/>
+    <rect x="28" y="26" width="18" height="12"/>
+    <rect x="88" y="36" width="14" height="10"/>
+    <rect x="102" y="30" width="14" height="10"/>
+  </g>
+
+  <rect x="100" y="14" width="16" height="16" fill="#ffd83d" stroke="#e8b800" stroke-width="1"/>
+
+  <path d="M0 104 V88 H16 V72 H32 V56 H48 V104 Z" fill="#6fbf3f" stroke="#1a2233" stroke-width="2" stroke-linejoin="miter"/>
+  <path d="M48 104 H56 V104 Z" fill="#6fbf3f" stroke="#1a2233" stroke-width="2"/>
+
+  <path d="M56 104 V72 H72 V56 H88 V40 H104 V24 H128 V104 Z" fill="#a1764d" stroke="#1a2233" stroke-width="2" stroke-linejoin="miter"/>
+
+  <g fill="#6fbf3f" stroke="#1a2233" stroke-width="2">
+    <rect x="104" y="24" width="24" height="16"/>
+    <rect x="88" y="40" width="40" height="16"/>
+  </g>
+
+  <g fill="none" stroke="rgba(26, 34, 51, 0.07)" stroke-width="1">
+    <path d="M16 0 V128 M32 0 V128 M48 0 V128 M64 0 V128 M80 0 V128 M96 0 V128 M112 0 V128"/>
+    <path d="M0 16 H128 M0 32 H128 M0 48 H128 M0 64 H128 M0 80 H128 M0 96 H128 M0 112 H128"/>
+  </g>
+
+  <rect width="128" height="128" fill="none" stroke="#1a2233" stroke-width="6"/>
+</svg>
