@@ -24,7 +24,7 @@
       <a class="nav-link" href="#features">Features</a>
       <a class="nav-link" href="#screenshots">Gallery</a>
       <a class="nav-link" href="#quickstart">Quick start</a>
-      <a class="nav-link" href="#faq">FAQ</a>
+      <a class="nav-link" href="#issues">Feedback</a>
       <a class="nav-link" href="https://github.com/f1owkang/Terrain-Diffusion-Next">GitHub</a>
       <div class="lang-switch">
         <a href="index.html" aria-label="中文">中</a>
@@ -40,7 +40,7 @@
   <div class="hero-inner">
     <p class="eyebrow">Terrain Diffusion Next</p>
     <h1>One seed,<br><span class="dim">one world.</span></h1>
-    <p class="hero-tagline">Streamed tile by tile from a three-stage diffusion model — folded ridges, plateau cliffs, calderas and gorges, all determined by your world seed. Every map is one of a kind.</p>
+    <p class="hero-tagline">Streamed tile by tile from a three-stage diffusion model — folded ridges, plateau cliffs, calderas and gorges, all decided by your world seed. Every map is one of a kind.</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="https://github.com/f1owkang/Terrain-Diffusion-Next/releases">Download</a>
       <a class="btn btn-ghost" href="https://github.com/f1owkang/Terrain-Diffusion-Next">GitHub</a>
@@ -59,10 +59,10 @@
 <section class="pipeline" id="pipeline">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 01 · Pipeline</p>
+      <p class="sec-tag">01 · Process</p>
       <p class="section-label">How it works</p>
       <h2 class="section-title">How a tile of terrain is born</h2>
-      <p class="section-sub">The real pipeline from the source code — every step runs deterministically from the world seed and config.</p>
+      <p class="section-sub">Six stages, from world seed to final heightmap — fully deterministic.</p>
     </div>
     <div class="pipeline-flow reveal">
       <div class="pipeline-step">
@@ -103,7 +103,7 @@
 <section class="features" id="features">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 02 · Features</p>
+      <p class="sec-tag">02 · Features</p>
       <p class="section-label">Features</p>
       <h2 class="section-title">Core design</h2>
       <p class="section-sub">Every stage starts from the model output and lands as hand-written rules — the vanilla generator is never reused.</p>
@@ -189,10 +189,10 @@
 <section class="screenshots" id="screenshots">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 03 · Gallery</p>
+      <p class="sec-tag">03 · Gallery</p>
       <p class="section-label">Gallery</p>
       <h2 class="section-title">Terrain gallery</h2>
-      <p class="section-sub">Screenshots coming soon — mountains, rivers and caves in all their glory.</p>
+      <p class="section-sub">Mountains, rivers and caves — coming soon, in all their glory.</p>
     </div>
     <div class="shot-grid">
       <div class="shot reveal" role="img" aria-label="Screenshot placeholder: terrain panorama">
@@ -214,7 +214,7 @@
 <section class="quickstart" id="quickstart">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 04 · Quick start</p>
+      <p class="sec-tag">04 · Quick start</p>
       <p class="section-label">Quick start</p>
       <h2 class="section-title">Quick start</h2>
       <p class="section-sub">Requires Fabric + Fabric API. The AI models (~2.5GB) download on first launch with automatic mirror failover; play offline afterwards.</p>
@@ -233,7 +233,7 @@
       <div class="step reveal">
         <span class="step-num">03</span>
         <h3>Create a world</h3>
-        <p>Select the <b>"Terrain Diffusion Next"</b> world type. The seed determines everything.</p>
+        <p>Select the <b>"Terrain Diffusion"</b> world type. The seed determines everything.</p>
       </div>
       <div class="step reveal">
         <span class="step-num">04</span>
@@ -247,10 +247,10 @@
 <section class="builds" id="builds">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 05 · Builds</p>
+      <p class="sec-tag">05 · Builds</p>
       <p class="section-label">Builds</p>
       <h2 class="section-title">Which build should I use?</h2>
-      <p class="section-sub">The CPU build is slow unless you are on macOS — the Windows or CUDA builds are recommended.</p>
+      <p class="section-sub">Except on macOS (automatic CoreML), the CPU build is slow — use the Windows or CUDA build.</p>
     </div>
     <div class="build-table-wrap reveal">
       <table class="build-table">
@@ -266,7 +266,7 @@
           <tr>
             <td class="build-name">CUDA</td>
             <td>NVIDIA GPUs</td>
-            <td>CUDA + cuDNN install (<a href="CUDA_INSTALL.md">guide</a>)</td>
+            <td>None — CUDA 12 runtime auto-downloaded on first launch</td>
           </tr>
           <tr>
             <td class="build-name">CPU</td>
@@ -277,6 +277,7 @@
       </table>
     </div>
     <div class="req-chips reveal">
+      <span class="chip">Ver <b>3.0.0-alpha</b></span>
       <span class="chip">Java <b>25</b></span>
       <span class="chip">VRAM <b>1.5GB</b></span>
       <span class="chip">RAM <b>2.5GB</b></span>
@@ -285,32 +286,27 @@
   </div>
 </section>
 
-<section class="faq" id="faq">
+<footer class="footer" id="issues">
   <div class="container">
-    <div class="section-head reveal">
-      <p class="sec-tag">SEC 06 · FAQ</p>
-      <p class="section-label">FAQ</p>
-      <h2 class="section-title">Common issues</h2>
-    </div>
-    <div class="faq-list reveal">
-      <details class="faq-item">
-        <summary>A dynamic link library (DLL) initialization routine failed</summary>
-        <p>Older Java versions trigger this. Minecraft 26.x requires <b>Java 25</b> or higher; the <a href="https://learn.microsoft.com/en-us/java/openjdk/download">latest Microsoft OpenJDK 25</a> is known to work.</p>
-      </details>
-      <details class="faq-item">
-        <summary>LoadLibrary failed with error 126 (CUDA build only)</summary>
-        <p>Typically an improper CUDA or cuDNN installation — see the troubleshooting steps in <code>CUDA_INSTALL.md</code>.</p>
-      </details>
-      <details class="faq-item">
-        <summary>Failed to load terrain-diffusion models</summary>
-        <p>Usually an out-of-memory error. The models take up about 2.5GB of RAM — increase Minecraft's RAM allocation in your launcher.</p>
-      </details>
-    </div>
-  </div>
-</section>
-
-<footer class="footer">
   <div class="container">
+    <svg class="footer-contours" viewBox="0 0 1440 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <g fill="none" stroke="rgba(150,175,210,0.16)">
+        <ellipse cx="200" cy="140" rx="160" ry="80"/>
+        <ellipse cx="200" cy="140" rx="110" ry="55"/>
+        <ellipse cx="200" cy="140" rx="64" ry="32"/>
+        <ellipse cx="800" cy="150" rx="220" ry="110"/>
+        <ellipse cx="800" cy="150" rx="150" ry="75"/>
+        <ellipse cx="800" cy="150" rx="88" ry="44"/>
+        <ellipse cx="1250" cy="140" rx="140" ry="70"/>
+        <ellipse cx="1250" cy="140" rx="92" ry="46"/>
+      </g>
+    </svg>
+    <div class="footer-issues">
+      <svg class="footer-issues-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <h2 class="footer-issues-title">Found a problem?</h2>
+      <p class="footer-issues-sub">Search Issues first in case it is already reported — if not, open a new one with your logs and version number, and we will follow up.</p>
+      <a class="btn btn-primary" href="https://github.com/f1owkang/Terrain-Diffusion-Next/issues/new">Open an Issue</a>
+    </div>
     <p class="footer-title">Terrain Diffusion Next</p>
     <div class="footer-links">
       <a href="https://github.com/f1owkang/Terrain-Diffusion-Next/releases">Releases</a>

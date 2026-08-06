@@ -20,11 +20,11 @@
       Terrain Diffusion Next
     </a>
     <nav class="topbar-links">
-      <a class="nav-link" href="#pipeline">生成管线</a>
-      <a class="nav-link" href="#features">功能</a>
-      <a class="nav-link" href="#screenshots">画廊</a>
+      <a class="nav-link" href="#pipeline">生成流程</a>
+      <a class="nav-link" href="#features">核心特性</a>
+      <a class="nav-link" href="#screenshots">地形画廊</a>
       <a class="nav-link" href="#quickstart">快速开始</a>
-      <a class="nav-link" href="#faq">FAQ</a>
+      <a class="nav-link" href="#issues">反馈问题</a>
       <a class="nav-link" href="https://github.com/f1owkang/Terrain-Diffusion-Next">GitHub</a>
       <div class="lang-switch">
         <a class="active" href="index.html" aria-label="中文">中</a>
@@ -40,15 +40,15 @@
   <div class="hero-inner">
     <p class="eyebrow">Terrain Diffusion Next</p>
     <h1>一颗种子，<br><span class="dim">生成一个世界</span></h1>
-    <p class="hero-tagline">三阶段扩散模型逐 tile 流式生成：折叠山脊、高原悬崖、火山口与峡谷由世界种子决定 —— 每张地图独一无二。</p>
+    <p class="hero-tagline">由世界种子驱动的三阶段扩散模型，逐瓦片流式生成：折叠山脊、高原悬崖、火山口与峡谷 —— 每一张地图都独一无二。</p>
     <div class="hero-cta">
-      <a class="btn btn-primary" href="https://github.com/f1owkang/Terrain-Diffusion-Next/releases">下载最新版</a>
-      <a class="btn btn-ghost" href="https://github.com/f1owkang/Terrain-Diffusion-Next">GitHub 仓库</a>
+      <a class="btn btn-primary" href="https://github.com/f1owkang/Terrain-Diffusion-Next/releases">下载 Mod</a>
+      <a class="btn btn-ghost" href="https://github.com/f1owkang/Terrain-Diffusion-Next">查看源码</a>
     </div>
     <div class="hero-stats">
-      <div class="stat"><b><em>20+2+1</em></b><span>采样步</span></div>
+      <div class="stat"><b><em>20+2+1</em></b><span>采样步数</span></div>
       <div class="stat"><b><em>6</em></b><span>输出通道</span></div>
-      <div class="stat"><b><em>64</em></b><span>tile 缓存</span></div>
+      <div class="stat"><b><em>64</em></b><span>瓦片缓存</span></div>
       <div class="stat"><b><em>2.5GB</em></b><span>模型体积</span></div>
     </div>
   </div>
@@ -59,41 +59,41 @@
 <section class="pipeline" id="pipeline">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 01 · Pipeline</p>
-      <p class="section-label">How it works</p>
+      <p class="sec-tag">01 · 生成流程</p>
+      <p class="section-label">生成流程</p>
       <h2 class="section-title">一块地形是怎么生成的</h2>
-      <p class="section-sub">从代码里读出来的真实管线：每一步都在世界种子与配置的驱动下确定性执行。</p>
+      <p class="section-sub">六个环节，从世界种子到最终高度图，全程确定性执行。</p>
     </div>
     <div class="pipeline-flow reveal">
       <div class="pipeline-step">
         <span class="p-num">STEP 01</span>
         <h3>扩散采样</h3>
-        <p>三阶段扩散模型输出高程与 4 个气候通道，按 tile 流式生成。</p>
+        <p>三阶段扩散模型输出高程与 4 个气候通道，逐块流式生成。</p>
       </div>
       <div class="pipeline-step">
         <span class="p-num">STEP 02</span>
         <h3>地形塑形</h3>
-        <p>折叠山脊噪波搭建山地骨架，高原映射压平峰顶、拉起悬崖。</p>
+        <p>折叠山脊的噪波搭建山体骨架，高原区域被压平、边缘拉起成悬崖。</p>
       </div>
       <div class="pipeline-step">
         <span class="p-num">STEP 03</span>
-        <h3>生物群系预判</h3>
-        <p>高程 + 温度/季节/降水/降水变异 + 坡度，先算一遍群系。</p>
+        <h3>群系预判</h3>
+        <p>结合高程、温度、降水与坡度，先预估一遍群系分布。</p>
       </div>
       <div class="pipeline-step">
         <span class="p-num">STEP 04</span>
         <h3>奇观点缀</h3>
-        <p>尖塔、火山口、桌山、石柱、峡谷——按生物群系门控随机落位。</p>
+        <p>尖塔、火山口、桌山、石柱与峡谷，按群系门控随机落位。</p>
       </div>
       <div class="pipeline-step">
         <span class="p-num">STEP 05</span>
         <h3>河流雕刻</h3>
-        <p>D8 汇流沿真实地形找路径，跨 tile 无缝，海平面下雕刻出蓄水河道。</p>
+        <p>流向分析沿真实地形寻路，跨区块无缝衔接，海平面以下雕出蓄水河道。</p>
       </div>
       <div class="pipeline-step">
         <span class="p-num">STEP 06</span>
-        <h3>最终定稿</h3>
-        <p>重算生物群系：河道读作河流，海岸读作海滩，输出高度图。</p>
+        <h3>收尾定稿</h3>
+        <p>重算群系：河道变为河流、海岸变为海滩，输出最终高度图。</p>
       </div>
     </div>
     <p class="pipeline-note reveal">seed <b>&rarr;</b> terrain <b>&rarr;</b> shapes <b>&rarr;</b> biomes <b>&rarr;</b> wonders <b>&rarr;</b> rivers <b>&rarr;</b> world</p>
@@ -103,10 +103,10 @@
 <section class="features" id="features">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 02 · Features</p>
-      <p class="section-label">Features</p>
+      <p class="sec-tag">02 · 核心特性</p>
+      <p class="section-label">核心特性</p>
       <h2 class="section-title">核心设计</h2>
-      <p class="section-sub">每个环节都从模型输出出发、以规则落笔 —— 不套用原版生成器。</p>
+      <p class="section-sub">不套用原版生成器 —— 每个环节都从模型输出出发、以手写规则落笔。</p>
     </div>
     <div class="feature-grid">
 
@@ -118,7 +118,7 @@
           <span class="feature-index">01 / 扩散地形</span>
         </div>
         <h3>扩散地形核心</h3>
-        <p>coarse 20 步 DPM-Solver++ &rarr; latent 2 步 flow matching &rarr; decoder 1 步，输出高程 + 4 气候通道；64 个 tile 缓存、单线程推理队列，探索与生成互不阻塞。</p>
+        <p>20 步粗采样、2 步细采样、1 步解码，输出高程与 4 个气候通道；64 块缓存 + 单线程推理队列，边探索边生成不卡顿。</p>
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
@@ -127,10 +127,10 @@
           <span class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19 L10 7 L13 13 L16 10 L20 19 Z"/><path d="M4 19 H20"/><path d="M7 19 V15 H11 V19"/></svg>
           </span>
-          <span class="feature-index">02 / 山脊 · 高原</span>
+          <span class="feature-index">02 / 山脊高原</span>
         </div>
         <h3>山脊与高原</h3>
-        <p>折叠山脊（abs 噪波）按高程加权叠加出山地骨架；高原带内 smoothstep 压平、带外悬崖陡升——类 Tectonic 的戏剧性剖面。</p>
+        <p>折叠山脊按高程加权叠出山体骨架；高原内部被压平，边缘陡升如刀切 —— 参考 Tectonic 的戏剧性剖面。</p>
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
@@ -142,7 +142,7 @@
           <span class="feature-index">03 / 稀有奇观</span>
         </div>
         <h3>稀有奇观</h3>
-        <p>五类地标按生物群系门控出现：针叶林尖塔、恶地火山口与峡谷、沙漠石柱、平原桌山；阈值 0.96~0.985，可遇不可求。</p>
+        <p>五类地标按群系出现：针叶林尖塔、恶地火山口与峡谷、沙漠石柱、平原桌山 —— 出现概率不到 4%，可遇不可求。</p>
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
@@ -154,7 +154,7 @@
           <span class="feature-index">04 / 真实河流</span>
         </div>
         <h3>沿地形走的河流</h3>
-        <p>D8 流向 + 汇流累积找真实路径，64 像素 halo 窗口保证跨 tile 无缝；雕刻至海平面下蓄水，河岸逐级渐变。</p>
+        <p>流向与汇流分析沿真实地形寻路，跨区块无缝衔接；河道雕刻至海平面以下蓄水，河岸逐级渐变。</p>
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
@@ -163,10 +163,10 @@
           <span class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15 14"/></svg>
           </span>
-          <span class="feature-index">05 / 生物群系规则</span>
+          <span class="feature-index">05 / 群系规则</span>
         </div>
         <h3>40+ 生物群系规则</h3>
-        <p>高程 + 温度/季节温度/降水/降水变异四通道 + Sobel 坡度，逐像素判定；海岸带检测成海滩，河道覆盖为河流。</p>
+        <p>高程与四个气候通道结合坡度检测，逐像素判定；海岸带变为海滩、河道覆盖为河流。</p>
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
@@ -175,10 +175,10 @@
           <span class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10 H21"/><path d="M8 5 V19"/><path d="M14 5 V19"/><path d="M3 14.5 H21"/></svg>
           </span>
-          <span class="feature-index">06 / 地形探索器</span>
+          <span class="feature-index">06 / 地形探索</span>
         </div>
         <h3>内置探索器</h3>
-        <p><code>/td-explore</code> 启动本地网页：高程/温度/降水等 6 通道分析图，coarse 全局地图，还能换种子预览下一张地图。</p>
+        <p><code>/td-explore</code> 启动本地网页：6 通道地形分析图、全局地图，还能换种子预览下一个世界。</p>
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
@@ -189,10 +189,10 @@
 <section class="screenshots" id="screenshots">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 03 · Gallery</p>
-      <p class="section-label">Gallery</p>
-      <h2 class="section-title">地形画廊</h2>
-      <p class="section-sub">截图待补充 —— 山地、河流与洞穴的风貌即将揭晓。</p>
+      <p class="sec-tag">03 · 地形画廊</p>
+      <p class="section-label">地形画廊</p>
+      <h2 class="section-title">截图图赏</h2>
+      <p class="section-sub">山地、河流与洞穴的风貌，即将揭晓。</p>
     </div>
     <div class="shot-grid">
       <div class="shot reveal" role="img" aria-label="截图占位：地形全景">
@@ -214,30 +214,30 @@
 <section class="quickstart" id="quickstart">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 04 · Quick start</p>
-      <p class="section-label">Quick start</p>
-      <h2 class="section-title">快速开始</h2>
-      <p class="section-sub">需要 Fabric + Fabric API。首次启动自动下载 AI 模型（约 2.5GB，多镜像自动切换），之后即可离线畅玩。</p>
+      <p class="sec-tag">04 · 快速开始</p>
+      <p class="section-label">快速开始</p>
+      <h2 class="section-title">快速上手</h2>
+      <p class="section-sub">Fabric + Fabric API。首次启动自动下载 AI 模型（约 2.5GB，多镜像自动切换），之后即可离线畅玩。</p>
     </div>
     <div class="steps">
       <div class="step reveal">
         <span class="step-num">01</span>
-        <h3>放入 mods</h3>
+        <h3>安装 Mod</h3>
         <p>从 <a href="https://github.com/f1owkang/Terrain-Diffusion-Next/releases">Releases</a> 下载与你的 Minecraft 版本匹配的 jar，放入 <code>mods/</code> 文件夹。</p>
       </div>
       <div class="step reveal">
         <span class="step-num">02</span>
-        <h3>启动下载模型</h3>
+        <h3>下载模型</h3>
         <p>启动游戏（需在线一次），AI 模型自动下载至 <code>terrain-diffusion-models/</code> 并做 SHA-256 校验。</p>
       </div>
       <div class="step reveal">
         <span class="step-num">03</span>
         <h3>创建世界</h3>
-        <p>世界类型选择 <b>「地形扩散·Next」</b>，世界种子决定一切地形。</p>
+        <p>世界类型选择 <b>「地形扩散」</b>，世界种子决定一切地形。</p>
       </div>
       <div class="step reveal">
         <span class="step-num">04</span>
-        <h3>设置 World Scale</h3>
+        <h3>世界尺度</h3>
         <p>点击 <b>Customize</b> 设置世界尺度（<code>1..6</code>），推荐 <code>2</code>。</p>
       </div>
     </div>
@@ -247,10 +247,10 @@
 <section class="builds" id="builds">
   <div class="container">
     <div class="section-head reveal">
-      <p class="sec-tag">SEC 05 · Builds</p>
-      <p class="section-label">Builds</p>
-      <h2 class="section-title">选择哪个构建</h2>
-      <p class="section-sub">除非你在 macOS 上，否则 CPU 构建很慢 —— Windows 或 CUDA 构建更推荐。</p>
+      <p class="sec-tag">05 · 版本选择</p>
+      <p class="section-label">版本选择</p>
+      <h2 class="section-title">该用哪个版本</h2>
+      <p class="section-sub">除 macOS（自动 CoreML 加速）外，CPU 构建很慢 —— 推荐 Windows 或 CUDA 构建。</p>
     </div>
     <div class="build-table-wrap reveal">
       <table class="build-table">
@@ -266,7 +266,7 @@
           <tr>
             <td class="build-name">CUDA</td>
             <td>NVIDIA 显卡</td>
-            <td>安装 CUDA + cuDNN（<a href="CUDA_INSTALL.md">教程</a>）</td>
+            <td>无需手动安装 —— 首次启动自动下载 CUDA 12 运行时</td>
           </tr>
           <tr>
             <td class="build-name">CPU</td>
@@ -277,6 +277,7 @@
       </table>
     </div>
     <div class="req-chips reveal">
+      <span class="chip">版本 <b>3.0.0-alpha</b></span>
       <span class="chip">Java <b>25</b></span>
       <span class="chip">显存 <b>1.5GB</b></span>
       <span class="chip">内存 <b>2.5GB</b></span>
@@ -285,32 +286,26 @@
   </div>
 </section>
 
-<section class="faq" id="faq">
+<footer class="footer" id="issues">
   <div class="container">
-    <div class="section-head reveal">
-      <p class="sec-tag">SEC 06 · FAQ</p>
-      <p class="section-label">FAQ</p>
-      <h2 class="section-title">常见问题</h2>
+    <svg class="footer-contours" viewBox="0 0 1440 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <g fill="none" stroke="rgba(150,175,210,0.16)">
+        <ellipse cx="200" cy="140" rx="160" ry="80"/>
+        <ellipse cx="200" cy="140" rx="110" ry="55"/>
+        <ellipse cx="200" cy="140" rx="64" ry="32"/>
+        <ellipse cx="800" cy="150" rx="220" ry="110"/>
+        <ellipse cx="800" cy="150" rx="150" ry="75"/>
+        <ellipse cx="800" cy="150" rx="88" ry="44"/>
+        <ellipse cx="1250" cy="140" rx="140" ry="70"/>
+        <ellipse cx="1250" cy="140" rx="92" ry="46"/>
+      </g>
+    </svg>
+    <div class="footer-issues">
+      <svg class="footer-issues-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <h2 class="footer-issues-title">遇到问题？</h2>
+      <p class="footer-issues-sub">先在 Issues 里搜索是否已有相同反馈；没有的话直接提一个新的 —— 附上日志与版本号，我们会尽快跟进。</p>
+      <a class="btn btn-primary" href="https://github.com/f1owkang/Terrain-Diffusion-Next/issues/new">提交 Issue</a>
     </div>
-    <div class="faq-list reveal">
-      <details class="faq-item">
-        <summary>动态链接库（DLL）初始化例程失败</summary>
-        <p>旧版 Java 会出现此问题。Minecraft 26.x 需要 <b>Java 25</b> 或更高版本，已知<a href="https://learn.microsoft.com/en-us/java/openjdk/download">最新版 Microsoft OpenJDK 25</a> 可用。</p>
-      </details>
-      <details class="faq-item">
-        <summary>LoadLibrary failed with error 126（仅 CUDA 构建）</summary>
-        <p>通常由 CUDA 或 cuDNN 安装不当导致，排查步骤见 <code>CUDA_INSTALL.md</code>。</p>
-      </details>
-      <details class="faq-item">
-        <summary>Failed to load terrain-diffusion models</summary>
-        <p>通常表示内存不足。模型约占 2.5GB 内存，请在启动器中调高 Minecraft 的内存分配。</p>
-      </details>
-    </div>
-  </div>
-</section>
-
-<footer class="footer">
-  <div class="container">
     <p class="footer-title">Terrain Diffusion Next</p>
     <div class="footer-links">
       <a href="https://github.com/f1owkang/Terrain-Diffusion-Next/releases">Releases</a>
