@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Terrain Diffusion Next — 扩散模型地形生成 Mod</title>
-<meta name="description" content="Terrain Diffusion Next：为 Minecraft 26.x 带来的扩散模型地形生成器 —— AI 生成的山脉、河流、海岸与矿脉。">
+<meta name="description" content="Terrain Diffusion Next：为 Minecraft 26.x 带来的扩散模型地形生成器 —— 一颗种子，生成一个世界。AI 生成的山脉、河流、海岸与矿脉。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=Chivo+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 </head>
@@ -22,7 +22,7 @@
     <nav class="topbar-links">
       <a class="nav-link" href="#pipeline">生成管线</a>
       <a class="nav-link" href="#features">功能</a>
-      <a class="nav-link" href="#screenshots">截图</a>
+      <a class="nav-link" href="#screenshots">画廊</a>
       <a class="nav-link" href="#quickstart">快速开始</a>
       <a class="nav-link" href="#faq">FAQ</a>
       <a class="nav-link" href="https://github.com/f1owkang/Terrain-Diffusion-Next">GitHub</a>
@@ -34,68 +34,37 @@
   </div>
 </header>
 
-<section class="hero">
-  <div class="contours" aria-hidden="true">
-    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-      <g fill="none" stroke="rgba(26,34,51,0.09)" stroke-width="1">
-        <path d="M-60 560 C 160 430, 300 460, 420 520 C 560 590, 660 470, 860 520 C 1040 565, 1240 470, 1500 540"/>
-        <path d="M-60 600 C 160 470, 300 500, 420 560 C 560 630, 660 510, 860 560 C 1040 605, 1240 510, 1500 580"/>
-        <path d="M-60 640 C 160 510, 300 540, 420 600 C 560 670, 660 550, 860 600 C 1040 645, 1240 550, 1500 620"/>
-        <path d="M-60 680 C 160 550, 300 580, 420 640 C 560 710, 660 590, 860 640 C 1040 685, 1240 590, 1500 660"/>
-      </g>
-      <g fill="none" stroke="rgba(26,34,51,0.09)" stroke-width="1">
-        <path d="M-60 260 C 180 150, 340 130, 480 210 C 600 280, 740 220, 900 200 C 1080 175, 1260 250, 1500 190"/>
-        <path d="M-60 300 C 180 190, 340 170, 480 250 C 600 320, 740 260, 900 240 C 1080 215, 1260 290, 1500 230"/>
-        <path d="M-60 340 C 180 230, 340 210, 480 290 C 600 360, 740 300, 900 280 C 1080 255, 1260 330, 1500 270"/>
-      </g>
-      <g fill="none" stroke="rgba(43,142,163,0.18)" stroke-width="1">
-        <path d="M820 700 C 880 610, 940 590, 1010 610 C 1090 632, 1130 690, 1100 760 C 1070 830, 990 850, 930 800 C 870 752, 852 720, 820 700 Z"/>
-        <path d="M856 672 C 900 610, 950 600, 1000 616 C 1060 636, 1080 688, 1056 744 C 1034 796, 972 812, 930 772 C 892 736, 872 708, 856 672 Z"/>
-        <path d="M890 648 C 924 606, 958 600, 992 612 C 1036 628, 1050 668, 1030 712 C 1012 752, 968 760, 938 732 C 912 706, 900 684, 890 648 Z"/>
-        <path d="M920 630 C 944 602, 966 600, 986 610 C 1012 622, 1020 650, 1006 682 C 992 712, 962 716, 942 696 C 924 678, 920 656, 920 630 Z"/>
-      </g>
-      <g fill="none" stroke="rgba(26,34,51,0.10)" stroke-width="1">
-        <path d="M180 820 C 240 750, 300 760, 340 830 C 380 900, 320 950, 240 950"/>
-        <path d="M214 800 C 250 752, 292 758, 320 806 C 348 854, 306 886, 256 886"/>
-      </g>
-    </svg>
-  </div>
-  <div class="hero-grid" aria-hidden="true"></div>
+<section class="hero" id="hero">
+  <canvas id="earth-canvas" aria-hidden="true"></canvas>
 
-  <span class="hero-coord tl" aria-hidden="true">26.1&deg;N &nbsp;78.3&deg;E</span>
-  <span class="hero-coord br" aria-hidden="true">TDN / MC 26.x / FABRIC</span>
-
-  <div class="hero-inner container">
-    <img src="assets/logo.svg" width="96" height="96" alt="Terrain Diffusion Next" style="border-radius: 22px; box-shadow: 0 8px 28px rgba(26,34,51,0.18); margin-bottom: 26px; animation: rise 0.7s both;">
-    <div class="hero-badges">
-      <img src="https://img.shields.io/badge/Minecraft-26.x-brightgreen?style=flat-square" alt="Minecraft 26.x">
-      <img src="https://img.shields.io/badge/Java-25-orange?style=flat-square" alt="Java 25">
-      <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License: MIT">
-      <img src="https://img.shields.io/github/contributors/f1owkang/Terrain-Diffusion-Next?style=flat-square" alt="Contributors">
-    </div>
-    <p class="eyebrow">Diffusion-model terrain generation</p>
-    <h1>把扩散模型地形<br><span class="dim">生成器装进 Minecraft</span></h1>
+  <div class="hero-inner">
+    <p class="eyebrow">Terrain Diffusion Next</p>
+    <h1>一颗种子，<br><span class="dim">生成一个世界</span></h1>
     <p class="hero-tagline">三阶段扩散模型逐 tile 流式生成：折叠山脊、高原悬崖、火山口与峡谷由世界种子决定 —— 每张地图独一无二。</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="https://github.com/f1owkang/Terrain-Diffusion-Next/releases">下载最新版</a>
       <a class="btn btn-ghost" href="https://github.com/f1owkang/Terrain-Diffusion-Next">GitHub 仓库</a>
     </div>
+    <div class="hero-stats">
+      <div class="stat"><b><em>20+2+1</em></b><span>采样步</span></div>
+      <div class="stat"><b><em>6</em></b><span>输出通道</span></div>
+      <div class="stat"><b><em>64</em></b><span>tile 缓存</span></div>
+      <div class="stat"><b><em>2.5GB</em></b><span>模型体积</span></div>
+    </div>
   </div>
 
-  <div class="hero-strip" aria-hidden="true"></div>
-  <div class="hero-scale" aria-hidden="true">
-    <span>-4km 深海</span><span>0m 海平面</span><span>2km 山地</span><span>6km+ 雪峰</span>
-  </div>
+  <div class="scroll-hint">Scroll</div>
 </section>
 
 <section class="pipeline" id="pipeline">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
+      <p class="sec-tag">SEC 01 · Pipeline</p>
       <p class="section-label">How it works</p>
       <h2 class="section-title">一块地形是怎么生成的</h2>
       <p class="section-sub">从代码里读出来的真实管线：每一步都在世界种子与配置的驱动下确定性执行。</p>
     </div>
-    <div class="pipeline-flow">
+    <div class="pipeline-flow reveal">
       <div class="pipeline-step">
         <span class="p-num">STEP 01</span>
         <h3>扩散采样</h3>
@@ -127,20 +96,21 @@
         <p>重算生物群系：河道读作河流，海岸读作海滩，输出高度图。</p>
       </div>
     </div>
-    <p class="pipeline-note">seed &rarr; terrain &rarr; shapes &rarr; biomes &rarr; wonders &rarr; rivers &rarr; world</p>
+    <p class="pipeline-note reveal">seed <b>&rarr;</b> terrain <b>&rarr;</b> shapes <b>&rarr;</b> biomes <b>&rarr;</b> wonders <b>&rarr;</b> rivers <b>&rarr;</b> world</p>
   </div>
 </section>
 
 <section class="features" id="features">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
+      <p class="sec-tag">SEC 02 · Features</p>
       <p class="section-label">Features</p>
       <h2 class="section-title">核心设计</h2>
       <p class="section-sub">每个环节都从模型输出出发、以规则落笔 —— 不套用原版生成器。</p>
     </div>
     <div class="feature-grid">
 
-      <article class="feature-card">
+      <article class="feature-card reveal">
         <div class="feature-top">
           <span class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20 L9 8 L13 15 L16 11 L21 20 Z"/><path d="M4 12 L8 5 L11 10"/></svg>
@@ -152,7 +122,7 @@
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
-      <article class="feature-card">
+      <article class="feature-card reveal">
         <div class="feature-top">
           <span class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19 L10 7 L13 13 L16 10 L20 19 Z"/><path d="M4 19 H20"/><path d="M7 19 V15 H11 V19"/></svg>
@@ -164,7 +134,7 @@
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
-      <article class="feature-card">
+      <article class="feature-card reveal">
         <div class="feature-top">
           <span class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 L16 9 H8 Z"/><path d="M12 9 V21"/><path d="M5 21 H19"/></svg>
@@ -176,7 +146,7 @@
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
-      <article class="feature-card">
+      <article class="feature-card reveal">
         <div class="feature-top">
           <span class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8 C 6 5, 9 5, 12 8 S 18 11, 21 8"/><path d="M3 15 C 6 12, 9 12, 12 15 S 18 18, 21 15"/><path d="M3 20 C 6 17.5, 9 17.5, 12 20 S 18 22.5, 21 20"/></svg>
@@ -188,7 +158,7 @@
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
-      <article class="feature-card">
+      <article class="feature-card reveal">
         <div class="feature-top">
           <span class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15 14"/></svg>
@@ -200,7 +170,7 @@
         <div class="feature-ramp" aria-hidden="true"></div>
       </article>
 
-      <article class="feature-card">
+      <article class="feature-card reveal">
         <div class="feature-top">
           <span class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10 H21"/><path d="M8 5 V19"/><path d="M14 5 V19"/><path d="M3 14.5 H21"/></svg>
@@ -218,20 +188,24 @@
 
 <section class="screenshots" id="screenshots">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
+      <p class="sec-tag">SEC 03 · Gallery</p>
       <p class="section-label">Gallery</p>
       <h2 class="section-title">地形画廊</h2>
       <p class="section-sub">截图待补充 —— 山地、河流与洞穴的风貌即将揭晓。</p>
     </div>
     <div class="shot-grid">
-      <div class="shot" role="img" aria-label="截图占位：地形全景">
-        <span>地形全景<span class="shot-note">图片待补充，置于 site/assets/</span></span>
+      <div class="shot reveal" role="img" aria-label="截图占位：地形全景">
+        <span class="shot-fig">FIG. 01</span>
+        <figcaption>地形全景<span class="shot-note">图片待补充，置于 site/assets/</span></figcaption>
       </div>
-      <div class="shot" role="img" aria-label="截图占位：河流水系">
-        <span>河流水系<span class="shot-note">图片待补充，置于 site/assets/</span></span>
+      <div class="shot reveal" role="img" aria-label="截图占位：河流水系">
+        <span class="shot-fig">FIG. 02</span>
+        <figcaption>河流水系<span class="shot-note">图片待补充，置于 site/assets/</span></figcaption>
       </div>
-      <div class="shot" role="img" aria-label="截图占位：洞穴与矿脉">
-        <span>洞穴与矿脉<span class="shot-note">图片待补充，置于 site/assets/</span></span>
+      <div class="shot reveal" role="img" aria-label="截图占位：洞穴与矿脉">
+        <span class="shot-fig">FIG. 03</span>
+        <figcaption>洞穴与矿脉<span class="shot-note">图片待补充，置于 site/assets/</span></figcaption>
       </div>
     </div>
   </div>
@@ -239,25 +213,30 @@
 
 <section class="quickstart" id="quickstart">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
+      <p class="sec-tag">SEC 04 · Quick start</p>
       <p class="section-label">Quick start</p>
       <h2 class="section-title">快速开始</h2>
       <p class="section-sub">需要 Fabric + Fabric API。首次启动自动下载 AI 模型（约 2.5GB，多镜像自动切换），之后即可离线畅玩。</p>
     </div>
     <div class="steps">
-      <div class="step">
+      <div class="step reveal">
+        <span class="step-num">01</span>
         <h3>放入 mods</h3>
         <p>从 <a href="https://github.com/f1owkang/Terrain-Diffusion-Next/releases">Releases</a> 下载与你的 Minecraft 版本匹配的 jar，放入 <code>mods/</code> 文件夹。</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
+        <span class="step-num">02</span>
         <h3>启动下载模型</h3>
         <p>启动游戏（需在线一次），AI 模型自动下载至 <code>terrain-diffusion-models/</code> 并做 SHA-256 校验。</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
+        <span class="step-num">03</span>
         <h3>创建世界</h3>
         <p>世界类型选择 <b>「地形扩散·Next」</b>，世界种子决定一切地形。</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
+        <span class="step-num">04</span>
         <h3>设置 World Scale</h3>
         <p>点击 <b>Customize</b> 设置世界尺度（<code>1..6</code>），推荐 <code>2</code>。</p>
       </div>
@@ -267,12 +246,13 @@
 
 <section class="builds" id="builds">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
+      <p class="sec-tag">SEC 05 · Builds</p>
       <p class="section-label">Builds</p>
       <h2 class="section-title">选择哪个构建</h2>
       <p class="section-sub">除非你在 macOS 上，否则 CPU 构建很慢 —— Windows 或 CUDA 构建更推荐。</p>
     </div>
-    <div class="build-table-wrap">
+    <div class="build-table-wrap reveal">
       <table class="build-table">
         <thead>
           <tr><th>构建</th><th>支持环境</th><th>需要配置</th></tr>
@@ -296,7 +276,7 @@
         </tbody>
       </table>
     </div>
-    <div class="req-chips">
+    <div class="req-chips reveal">
       <span class="chip">Java <b>25</b></span>
       <span class="chip">显存 <b>1.5GB</b></span>
       <span class="chip">内存 <b>2.5GB</b></span>
@@ -307,11 +287,12 @@
 
 <section class="faq" id="faq">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
+      <p class="sec-tag">SEC 06 · FAQ</p>
       <p class="section-label">FAQ</p>
       <h2 class="section-title">常见问题</h2>
     </div>
-    <div class="faq-list">
+    <div class="faq-list reveal">
       <details class="faq-item">
         <summary>动态链接库（DLL）初始化例程失败</summary>
         <p>旧版 Java 会出现此问题。Minecraft 26.x 需要 <b>Java 25</b> 或更高版本，已知<a href="https://learn.microsoft.com/en-us/java/openjdk/download">最新版 Microsoft OpenJDK 25</a> 可用。</p>
@@ -342,5 +323,6 @@
   </div>
 </footer>
 
+<script src="app.js"></script>
 </body>
 </html>
