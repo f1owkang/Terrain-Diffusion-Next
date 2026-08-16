@@ -232,7 +232,8 @@ public final class BiomeClassifier {
                     } else if (hasSnow) {
                         biome = (treesSparse || treesForest) ? SNOWY_TAIGA_SPARSE : SNOWY_TAIGA;
                     } else if (treesNone) {
-                        if (warm || hot) biome = DESERT;
+                        if (hot && !lowland && treeMoisture < 0.35f) biome = BADLANDS; // arid upland mesas
+                        else if (warm || hot) biome = DESERT;
                         else if (barren && !lowland && (cold || cool || temperate)) biome = CUSTOM_GROVE;
                         else if (treeMoisture < 0.35f || precip < 350f) biome = CUSTOM_GROVE;
                         else biome = PLAINS;
@@ -269,7 +270,72 @@ public final class BiomeClassifier {
                 out[idx] = biome;
             }
         }
+        smoothSpeckles(out, elevPadded, riverMask, H, W);
         return out;
+    }
+
+    /**
+     * Majority-filter isolated single-pixel biome speckles. Oceans, coastlines
+     * and carved rivers are left untouched so shores and channels stay crisp.
+     *
+     * <p>Smoothing only sees this tile's own pixels (no cross-tile biome halo), so
+     * a fully seamless border would need neighbour-tile biome context. Requiring
+     * only a strict majority of the in-bounds neighbours keeps tile edges and
+     * corners as consistently smoothed as the interior.
+     */
+    private static void smoothSpeckles(short[] out, float[] elevPadded, boolean[] riverMask, int H, int W) {
+        if (!TerrainDiffusionConfig.biomeSmoothingEnabled()) return;
+        short[] smoothed = out.clone();
+        int PW = W + 2;
+        for (int r = 0; r < H; r++) {
+            for (int c = 0; c < W; c++) {
+                int idx = r * W + c;
+                if (riverMask != null && riverMask[idx]) continue;
+                if (elevPadded[(r + 1) * PW + (c + 1)] < 0f) continue;
+
+                boolean coastal = false;
+                for (int dr = -1; dr <= 1 && !coastal; dr++) {
+                    for (int dc = -1; dc <= 1; dc++) {
+                        if (dr == 0 && dc == 0) continue;
+                        if (elevPadded[(r + 1 + dr) * PW + (c + 1 + dc)] < 0f) {
+                            coastal = true;
+                            break;
+                        }
+                    }
+                }
+                if (coastal) continue;
+
+                int[] votes = new int[256];
+                int total = 0;
+                for (int dr = -1; dr <= 1; dr++) {
+                    for (int dc = -1; dc <= 1; dc++) {
+                        if (dr == 0 && dc == 0) continue;
+                        int nr = r + dr, nc = c + dc;
+                        if (nr < 0 || nr >= H || nc < 0 || nc >= W) continue;
+                        short nb = out[nr * W + nc];
+                        if (nb < 0 || nb >= votes.length) continue;
+                        if (nb == RIVER || nb == FROZEN_RIVER) continue; // rivers never vote
+                        votes[nb]++;
+                        total++;
+                    }
+                }
+                if (total < 3) continue; // corners lack enough neighbours
+
+                int best = -1, bestCount = 0;
+                for (int b = 0; b < votes.length; b++) {
+                    if (votes[b] > bestCount) {
+                        bestCount = votes[b];
+                        best = b;
+                    }
+                }
+                // Strict majority of the available neighbours (no fixed 5-of-8),
+                // so tile edges and corners smooth as consistently as the interior.
+                if (best >= 0 && bestCount * 2 > total && best != out[idx]) {
+                    smoothed[idx] = (short) best;
+                }
+            }
+        }
+        System.arraycopy(smoothed, 0, out, 0, out.length);
     }
 
     private static float[] computeSlopeRatio(float[] elevPadded, int H, int W, float pixelSizeM) {

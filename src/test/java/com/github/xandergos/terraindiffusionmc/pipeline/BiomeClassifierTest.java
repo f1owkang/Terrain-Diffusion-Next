@@ -83,4 +83,99 @@ class BiomeClassifierTest {
         short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, H, W, pixelSizeM, riverMask);
         assertEquals(BiomeClassifier.RIVER, biomes[0]);
     }
+
+    @Test
+    void badlandsInHotAridUpland() {
+        float pixelSizeM = 90f;
+        // Upland (300m), hot (30°C), arid -> badlands
+        float[] elevUp = {300};
+        float[] elevPaddedUp = {300,300,300, 300,300,300, 300,300,300};
+        float[] climateUp = {30, 100, 50, 20};
+        short[] up = BiomeClassifier.classify(elevUp, climateUp, 0, 0, elevPaddedUp, 1, 1, pixelSizeM);
+        assertEquals(BiomeClassifier.BADLANDS, up[0]);
+
+        // Lowland (50m), hot (30°C), arid -> desert
+        float[] elevLow = {50};
+        float[] elevPaddedLow = {50,50,50, 50,50,50, 50,50,50};
+        float[] climateLow = {30, 100, 50, 20};
+        short[] low = BiomeClassifier.classify(elevLow, climateLow, 0, 0, elevPaddedLow, 1, 1, pixelSizeM);
+        assertEquals(BiomeClassifier.DESERT, low[0]);
+    }
+
+    @Test
+    void smoothingRemovesIsolatedSpeckle() {
+        int H = 3, W = 3;
+        float pixelSizeM = 90f;
+        float[] elev = new float[9];
+        java.util.Arrays.fill(elev, 50f);
+        float[] elevPadded = new float[25];
+        java.util.Arrays.fill(elevPadded, 50f);
+        // Center: hot & arid (desert). 8 neighbours: temperate & moist (forest).
+        float[] temp    = {15,15,15, 15,30,15, 15,15,15};
+        float[] season  = {200,200,200, 200,100,200, 200,200,200};
+        float[] precip  = {800,800,800, 800,50,800, 800,800,800};
+        float[] pCV     = {30,30,30, 30,20,30, 30,30,30};
+        float[] climate = new float[4 * 9];
+        System.arraycopy(temp, 0, climate, 0, 9);
+        System.arraycopy(season, 0, climate, 9, 9);
+        System.arraycopy(precip, 0, climate, 18, 9);
+        System.arraycopy(pCV, 0, climate, 27, 9);
+
+        short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, H, W, pixelSizeM);
+        assertEquals(BiomeClassifier.FOREST, biomes[4]);
+    }
+
+    @Test
+    void smoothingPreservesRiver() {
+        int H = 3, W = 3;
+        float pixelSizeM = 90f;
+        float[] elev = new float[9];
+        java.util.Arrays.fill(elev, 50f);
+        float[] elevPadded = new float[25];
+        java.util.Arrays.fill(elevPadded, 50f);
+        boolean[] riverMask = new boolean[9];
+        riverMask[4] = true;
+        float[] temp    = {15,15,15, 15,15,15, 15,15,15};
+        float[] season  = {200,200,200, 200,200,200, 200,200,200};
+        float[] precip  = {800,800,800, 800,800,800, 800,800,800};
+        float[] pCV     = {30,30,30, 30,30,30, 30,30,30};
+        float[] climate = new float[4 * 9];
+        System.arraycopy(temp, 0, climate, 0, 9);
+        System.arraycopy(season, 0, climate, 9, 9);
+        System.arraycopy(precip, 0, climate, 18, 9);
+        System.arraycopy(pCV, 0, climate, 27, 9);
+
+        short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, H, W, pixelSizeM, riverMask);
+        assertEquals(BiomeClassifier.RIVER, biomes[4]);
+        assertEquals(BiomeClassifier.FOREST, biomes[0]);
+    }
+
+    @Test
+    void smoothingPreservesOcean() {
+        int H = 3, W = 3;
+        float pixelSizeM = 90f;
+        float[] elev = new float[9];
+        java.util.Arrays.fill(elev, 50f);
+        elev[4] = -10f;
+        float[] elevPadded = new float[25];
+        java.util.Arrays.fill(elevPadded, 50f);
+        elevPadded[12] = -10f;
+        float[] temp    = {15,15,15, 15,15,15, 15,15,15};
+        float[] season  = {200,200,200, 200,200,200, 200,200,200};
+        float[] precip  = {800,800,800, 800,800,800, 800,800,800};
+        float[] pCV     = {30,30,30, 30,30,30, 30,30,30};
+        float[] climate = new float[4 * 9];
+        System.arraycopy(temp, 0, climate, 0, 9);
+        System.arraycopy(season, 0, climate, 9, 9);
+        System.arraycopy(precip, 0, climate, 18, 9);
+        System.arraycopy(pCV, 0, climate, 27, 9);
+
+        short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, H, W, pixelSizeM);
+        assertEquals(BiomeClassifier.OCEAN, biomes[4]);
+        // Land neighbours must stay land (coast preserved).
+        assertNotEquals(BiomeClassifier.OCEAN, biomes[0]);
+        assertNotEquals(BiomeClassifier.WARM_OCEAN, biomes[0]);
+        assertNotEquals(BiomeClassifier.COLD_OCEAN, biomes[0]);
+        assertNotEquals(BiomeClassifier.FROZEN_OCEAN, biomes[0]);
+    }
 }

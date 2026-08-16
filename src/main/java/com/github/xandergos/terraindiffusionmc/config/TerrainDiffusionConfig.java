@@ -276,6 +276,11 @@ public final class TerrainDiffusionConfig {
         return readFloat("biome.noise_strength", 1f);
     }
 
+    /** Whether to majority-filter isolated single-pixel biome speckles in BiomeClassifier output. */
+    public static boolean biomeSmoothingEnabled() {
+        return readBoolean("biome.smoothing_enabled", true);
+    }
+
     private static void loadDefaults() {
         boolean loadedFromResource = false;
         try (InputStream in = TerrainDiffusionConfig.class.getResourceAsStream(RESOURCE_PATH)) {
