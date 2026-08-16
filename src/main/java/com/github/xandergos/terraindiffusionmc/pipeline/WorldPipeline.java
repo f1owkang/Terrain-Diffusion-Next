@@ -140,6 +140,10 @@ public final class WorldPipeline implements AutoCloseable {
         // Coordinates are intentionally swapped
         float[][][] syn = syntheticMapFactory.sample(j1, i1, j1 + S, i1 + S);
 
+        // Conditional generation: replace the elevation prior with an imported heightmap.
+        HeightmapConditioner cond = HeightmapConditioner.get();
+        if (cond != null) cond.applyElevSqrt(syn[0], j1, i1, S, S);
+
         // Modify temp channel (index 1): where <= 20, scale toward 20
         for (int r = 0; r < S; r++)
             for (int c = 0; c < S; c++) {

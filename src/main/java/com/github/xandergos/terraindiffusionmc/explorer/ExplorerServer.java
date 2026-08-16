@@ -72,6 +72,7 @@ public final class ExplorerServer {
         server.createContext("/api/coarse_stats", ExplorerServer::handleCoarseStats);
         server.createContext("/api/detail.png", ExplorerServer::handleDetailPng);
         server.createContext("/api/detail_raw", ExplorerServer::handleDetailRaw);
+        server.createContext("/api/config", ExplorerServer::handleConfig);
         // Single-thread executor matches Python's threaded=False
         server.setExecutor(Executors.newSingleThreadExecutor(r -> {
             Thread t = new Thread(r, "terrain-explorer-http");
@@ -175,6 +176,32 @@ public final class ExplorerServer {
             sendJson(ex, 200, resp);
         } catch (Exception e) {
             sendError(ex, 500, e.getMessage());
+        }
+    }
+
+    /** POST /api/config body={biome_noise_strength:number|null} → runtime A/B override for the session. */
+    private static void handleConfig(HttpExchange ex) throws IOException {
+        if (!ex.getRequestMethod().equalsIgnoreCase("POST")) { send405(ex); return; }
+        try {
+            String body = readBody(ex, 1024);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = GSON.fromJson(body, Map.class);
+            if (data.containsKey("biome_noise_strength")) {
+                Object v = data.get("biome_noise_strength");
+                Float ns = null;
+                if (v != null) {
+                    if (!(v instanceof Number)) throw new IllegalArgumentException("biome_noise_strength must be a number");
+                    float f = ((Number) v).floatValue();
+                    if (!Float.isFinite(f)) throw new IllegalArgumentException("biome_noise_strength must be finite");
+                    ns = Math.max(0f, Math.min(4f, f));
+                }
+                TerrainDiffusionConfig.setBiomeNoiseStrengthOverride(ns);
+            }
+            Map<String, Object> resp = new LinkedHashMap<>();
+            resp.put("biome_noise_strength", TerrainDiffusionConfig.biomeNoiseStrength());
+            sendJson(ex, 200, resp);
+        } catch (Exception e) {
+            sendError(ex, 400, e.getMessage());
         }
     }
 
@@ -323,11 +350,13 @@ public final class ExplorerServer {
             int centerJ = cj * 256 + panJ;
             int half    = detailSize / 2;
 
-            float[][] out = LocalTerrainProvider.getPipelineData(
-                    centerI - half, centerJ - half, centerI + half, centerJ + half,
-                    mode.equals("temperature"));
-            float[] elevFlat  = out[0];
-            float[] climate   = out[1];
+            // Climate is needed for temperature/biomes rendering and for the wonders
+            // overlay (wonder placement is biome-gated), so fetch it whenever requested.
+            boolean wantClimate = mode.equals("temperature") || mode.equals("biomes") || "1".equals(q.get("wonders"));
+            LocalTerrainProvider.PipelineData pd = LocalTerrainProvider.getPipelineData(
+                    centerI - half, centerJ - half, centerI + half, centerJ + half, wantClimate);
+            float[] elevFlat  = pd.elev;
+            float[] climate   = pd.climate;
             int H = detailSize, W = detailSize;
 
             float[][] rgba;
@@ -341,6 +370,8 @@ public final class ExplorerServer {
                 float vmin = nanMin(temp), vmax = nanMax(temp);
                 if (vmax == vmin) vmax = vmin + 1f;
                 rgba = applyColormap1D(temp, H, W, vmin, vmax, "rdbu_r");
+            } else if (mode.equals("biomes") && pd.biomeIds != null) {
+                rgba = applyBiomeColormap(pd.biomeIds, H, W);
             } else {
                 // relief mode (default)
                 float[][] reliefRgb = ReliefMap.getReliefMap(elevFlat, H, W, 90.0);
@@ -352,6 +383,8 @@ public final class ExplorerServer {
                     rgba[3][i] = 1f;
                 }
             }
+
+            applyOverlays(rgba, pd, H, W, q);
 
             byte[] png = toPng(rgba, H, W);
             ex.getResponseHeaders().set("Content-Type", "image/png");
@@ -385,10 +418,10 @@ public final class ExplorerServer {
             int half    = detailSize / 2;
             int H = detailSize, W = detailSize;
 
-            float[][] out = LocalTerrainProvider.getPipelineData(
+            LocalTerrainProvider.PipelineData pd = LocalTerrainProvider.getPipelineData(
                     centerI - half, centerJ - half, centerI + half, centerJ + half, true);
-            float[] elevFlat = out[0];
-            float[] climate  = out[1];
+            float[] elevFlat = pd.elev;
+            float[] climate  = pd.climate;
 
             // Elevation → int16 LE (matching Python: clip(floor(elev), -32768, 32767).astype('<i2'))
             ByteBuffer elevBuf = ByteBuffer.allocate(H * W * 2).order(ByteOrder.LITTLE_ENDIAN);
@@ -482,6 +515,72 @@ public final class ExplorerServer {
         }
         return rgba;
     }
+
+    /**
+     * Tint river (blue) and wonder (magenta) pixels over an already-rendered RGBA grid.
+     * Query params rivers=1 / wonders=1 enable the corresponding overlay.
+     */
+    private static void applyOverlays(float[][] rgba, LocalTerrainProvider.PipelineData pd, int H, int W, Map<String, String> q) {
+        boolean showRivers  = "1".equals(q.get("rivers"));
+        boolean showWonders = "1".equals(q.get("wonders"));
+        if (!showRivers && !showWonders) return;
+        if (pd == null) return;
+        for (int i = 0; i < H * W; i++) {
+            if (showRivers && pd.riverMask != null && pd.riverMask[i]) {
+                rgba[0][i] = 0.10f; rgba[1][i] = 0.45f; rgba[2][i] = 1.00f; rgba[3][i] = 1f;
+            } else if (showWonders && pd.wonderMask != null && pd.wonderMask[i]) {
+                rgba[0][i] = 1.00f; rgba[1][i] = 0.10f; rgba[2][i] = 0.90f; rgba[3][i] = 1f;
+            }
+        }
+    }
+
+    /** Render classified biome ids with a small fixed colour palette (gray = unclassified). */
+    private static float[][] applyBiomeColormap(short[] biomeIds, int H, int W) {
+        float[][] rgba = new float[4][H * W];
+        for (int i = 0; i < H * W; i++) {
+            float[] c = biomeColor(biomeIds[i]);
+            rgba[0][i] = c[0]; rgba[1][i] = c[1]; rgba[2][i] = c[2]; rgba[3][i] = 1f;
+        }
+        return rgba;
+    }
+
+    private static float[] biomeColor(short id) {
+        switch (id) {
+            case 41: return rgb(0.00f, 0.25f, 0.55f); // warm ocean
+            case 44: return rgb(0.10f, 0.30f, 0.65f); // ocean
+            case 46: return rgb(0.20f, 0.40f, 0.75f); // cold ocean
+            case 48: return rgb(0.55f, 0.75f, 0.95f); // frozen ocean
+            case 9:  case 11: return rgb(0.20f, 0.45f, 0.85f); // river / frozen river
+            case 2:  case 4:  case 7: return rgb(0.90f, 0.85f, 0.65f); // beaches / stony shore
+            case 1:  return rgb(0.35f, 0.70f, 0.30f); // plains
+            case 3:  return rgb(0.85f, 0.90f, 0.90f); // snowy plains
+            case 5:  return rgb(0.95f, 0.85f, 0.45f); // desert
+            case 6:  return rgb(0.25f, 0.45f, 0.30f); // swamp
+            case 38: return rgb(0.30f, 0.55f, 0.50f); // mangrove swamp
+            case 8:  return rgb(0.20f, 0.50f, 0.20f); // forest
+            case 28: return rgb(0.10f, 0.30f, 0.15f); // dark forest
+            case 30: return rgb(0.55f, 0.70f, 0.40f); // birch forest
+            case 108:return rgb(0.45f, 0.65f, 0.35f); // forest sparse
+            case 15: return rgb(0.25f, 0.45f, 0.30f); // taiga
+            case 115:return rgb(0.35f, 0.55f, 0.40f); // taiga sparse
+            case 16: return rgb(0.65f, 0.80f, 0.75f); // snowy taiga
+            case 116:return rgb(0.70f, 0.82f, 0.78f); // snowy taiga sparse
+            case 17: return rgb(0.75f, 0.75f, 0.35f); // savanna
+            case 18: return rgb(0.85f, 0.65f, 0.30f); // savanna plateau
+            case 23: return rgb(0.15f, 0.45f, 0.20f); // jungle
+            case 26: return rgb(0.80f, 0.45f, 0.25f); // badlands
+            case 29: return rgb(0.55f, 0.75f, 0.50f); // meadow
+            case 31: return rgb(0.60f, 0.75f, 0.70f); // grove
+            case 120:return rgb(0.50f, 0.70f, 0.55f); // custom grove
+            case 19: return rgb(0.55f, 0.60f, 0.55f); // windswept hills
+            case 32: return rgb(0.85f, 0.88f, 0.92f); // snowy slopes
+            case 33: return rgb(0.95f, 0.97f, 1.00f); // frozen peaks
+            case 35: return rgb(0.60f, 0.60f, 0.65f); // stony peaks
+            default: return rgb(0.55f, 0.55f, 0.55f);
+        }
+    }
+
+    private static float[] rgb(float r, float g, float b) { return new float[]{r, g, b}; }
 
     // =========================================================================
     // HTTP utilities

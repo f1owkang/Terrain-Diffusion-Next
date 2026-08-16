@@ -268,12 +268,45 @@ public final class TerrainDiffusionConfig {
     }
 
     // =========================================================================
+    // Conditional generation (import a user heightmap)
+    // =========================================================================
+
+    /** Whether to replace the synthetic elevation prior with an imported heightmap. */
+    public static boolean conditionalEnabled() {
+        return readBoolean("conditional.enabled", false);
+    }
+
+    /** Path to a grayscale heightmap PNG (empty = disabled). Missing channels fall back to synthetic noise. */
+    public static String conditionalHeightmapPath() {
+        return readStringRaw("conditional.heightmap_path", "");
+    }
+
+    /** Elevation (metres) mapped to the heightmap's darkest pixel. */
+    public static float conditionalHeightmapMin() {
+        return readFloat("conditional.heightmap_min", -100f);
+    }
+
+    /** Elevation (metres) mapped to the heightmap's brightest pixel. */
+    public static float conditionalHeightmapMax() {
+        return readFloat("conditional.heightmap_max", 4000f);
+    }
+
+    // =========================================================================
     // Biome tweaks
     // =========================================================================
 
+    private static volatile Float BIOME_NOISE_STRENGTH_OVERRIDE = null;
+
     /** Multiplier for fine climate noise amplitude in BiomeClassifier (0 = off, 1 = default). */
     public static float biomeNoiseStrength() {
+        Float override = BIOME_NOISE_STRENGTH_OVERRIDE;
+        if (override != null) return override;
         return readFloat("biome.noise_strength", 1f);
+    }
+
+    /** Explorer A/B: override biome.noise_strength for the current session (null restores config value). */
+    public static void setBiomeNoiseStrengthOverride(Float value) {
+        BIOME_NOISE_STRENGTH_OVERRIDE = value;
     }
 
     /** Whether to majority-filter isolated single-pixel biome speckles in BiomeClassifier output. */
@@ -302,6 +335,12 @@ public final class TerrainDiffusionConfig {
     private static String readString(String key, String defaultValue) {
         String value = PROPERTIES.getProperty(key);
         return value != null ? value.trim().toLowerCase() : defaultValue;
+    }
+
+    /** Like {@link #readString} but preserves case (for filesystem paths). */
+    private static String readStringRaw(String key, String defaultValue) {
+        String value = PROPERTIES.getProperty(key);
+        return value != null ? value.trim() : defaultValue;
     }
 
     private static Path resolveConfigPath() {

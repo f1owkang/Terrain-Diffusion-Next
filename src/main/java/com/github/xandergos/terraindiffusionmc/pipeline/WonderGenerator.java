@@ -29,17 +29,20 @@ public final class WonderGenerator {
 
     private WonderGenerator() {}
 
-    public static void apply(float[] elev, short[] biomes, int i0, int j0,
+    /** Applies all wonder types, returning a mask of placed wonder centre pixels (or null when disabled). */
+    public static boolean[] apply(float[] elev, short[] biomes, int i0, int j0,
                               int H, int W, float pixelSizeM, long seed) {
-        if (!TerrainDiffusionConfig.wondersEnabled()) return;
+        if (!TerrainDiffusionConfig.wondersEnabled()) return null;
 
+        boolean[] mask = new boolean[H * W];
         for (int type = 0; type < 5; type++) {
-            applyType(elev, biomes, i0, j0, H, W, pixelSizeM, seed, type);
+            applyType(elev, biomes, i0, j0, H, W, pixelSizeM, seed, type, mask);
         }
+        return mask;
     }
 
     private static void applyType(float[] elev, short[] biomes, int i0, int j0,
-                                   int H, int W, float pixelSizeM, long seed, int type) {
+                                   int H, int W, float pixelSizeM, long seed, int type, boolean[] mask) {
         boolean needsRidge = (type == GORGE);
         boolean[] ridgeMask = null;
         if (needsRidge) ridgeMask = computeRidgeMask(elev, H, W);
@@ -64,6 +67,7 @@ public final class WonderGenerator {
                 if (!biomeGate(biomes[idx], type)) continue;
                 if (needsRidge && !ridgeMask[idx]) continue;
 
+                mask[idx] = true;
                 applyKernel(elev, biomes, r, c, H, W, type, shapeNoise, pixelSizeM);
             }
         }

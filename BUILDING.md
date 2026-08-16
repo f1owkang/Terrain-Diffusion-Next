@@ -1,6 +1,6 @@
 # 从源码构建
 
-构建过程需要联网，以从 Hugging Face 拉取固定的模型清单元数据（离线构建会失败）。
+构建默认使用仓库内已提交的模型清单（`model-assets-manifest.json`），支持离线构建；仅当清单缺失或修订号不匹配时才回退到 Hugging Face 实时查询（需联网）。
 
 **环境要求**
 
@@ -17,9 +17,9 @@
 ```
 
 - 有效 `mcTarget` 值：261（26.1.2）、262（26.2）、263（26.3-snapshot-3），定义于 `gradle.properties`；未知值会抛出 GradleException
-- 产物版本形如 `{mod_version}-{windows|cuda|cpu}+{minecraft_version}`（当前 `3.0.0-...`）
+- 产物版本形如 `{mod_version}-{windows|cuda|cpu}+{minecraft_version}`（当前 `3.0.1-beta-...`，见 `gradle.properties`）
 - `./gradlew runClient` 启动开发客户端；`-PwithSourcesJar=true` 生成 sources jar；所有 JavaExec 任务强制使用仓库根目录的 `log4j2-dev.xml`
-- `./gradlew pipelineTest` 运行 `PipelineTest.main`（JavaExec，`-Xmx8g`）：下载真实模型、生成一块 256 方块地形，若显存增量超过 2500 MB（经 `nvidia-smi` 测量）则失败。注意这不是 JUnit 测试，仓库没有测试框架之外的测试入口——单元测试（JUnit 5）请直接通过 IDE 或 `./gradlew test` 运行
+- `./gradlew pipelineTest` 运行 `PipelineTest.main`（JavaExec，`-Xmx8g`）：下载真实模型、生成一块 256 方块地形，若显存增量超过 2500 MB（经 `nvidia-smi` 测量）则失败。这是集成回归门禁，不是 JUnit 测试；单元测试（JUnit 5）用 `./gradlew test` 运行
 
 **网络代理（部分开发机）**
 
@@ -59,7 +59,7 @@ cd onnxruntime
 
 AI 地形的核心是三阶段扩散管线（coarse 20 步 DPM-Solver++ → latent 2 步 flow matching → decoder 1 步），模型输出高程 + 气候变量；与 Minecraft 的集成全靠手写规则。
 
-- [BiomeClassifier.java](https://github.com/f1owkang/Terrain-Diffusion-Next/blob/mc26/src/main/java/com/github/xandergos/terraindiffusionmc/pipeline/BiomeClassifier.java)（约 290 行）——高程 + 4 气候变量 → 生物群系规则，含海岸带检测（海滩）与河道覆盖（河流/冻结河流）
+- [BiomeClassifier.java](https://github.com/f1owkang/Terrain-Diffusion-Next/blob/mc26/src/main/java/com/github/xandergos/terraindiffusionmc/pipeline/BiomeClassifier.java)（约 360 行）——高程 + 4 气候变量 → 生物群系规则，含海岸带检测（海滩）与河道覆盖（河流/冻结河流）
 - [RiverDetector.java](https://github.com/f1owkang/Terrain-Diffusion-Next/blob/mc26/src/main/java/com/github/xandergos/terraindiffusionmc/pipeline/RiverDetector.java)（D8 流向 + 汇流累积）与 [RiverCarver.java](https://github.com/f1owkang/Terrain-Diffusion-Next/blob/mc26/src/main/java/com/github/xandergos/terraindiffusionmc/pipeline/RiverCarver.java)（路径雕刻，移植自上游 PR #207）：hybrid 模式用 D8 在 halo 扩展窗口（64 原生像素）上算河网保证跨 tile 无缝，再沿路径雕刻出蓄水河道；`rivers.mode=carver` 可切回纯噪声雕刻
 - [TerrainShaping.java](https://github.com/f1owkang/Terrain-Diffusion-Next/blob/mc26/src/main/java/com/github/xandergos/terraindiffusionmc/pipeline/TerrainShaping.java) — 山脊与高原塑形（`terrain.ridges.*` / `terrain.plateau.*` 配置），在模型输出的高程上叠加手写塑形
 - [WonderGenerator.java](https://github.com/f1owkang/Terrain-Diffusion-Next/blob/mc26/src/main/java/com/github/xandergos/terraindiffusionmc/pipeline/WonderGenerator.java) — 稀有奇观（尖塔 / 火山口 / 桌山 / 石柱 / 峡谷），按生物群系门控、按世界种子确定性生成（`wonders.enabled` 配置）

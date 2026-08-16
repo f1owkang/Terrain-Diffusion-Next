@@ -153,6 +153,8 @@
   .size-select { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 11px; padding: 3px 4px; outline: none; cursor: pointer; }
   .size-select:hover { border-color: var(--accent); }
 
+  .noise-input { width: 72px; flex: 0 0 72px; font-size: 11px; padding: 3px 4px; }
+
   .spawn-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: monospace; }
   .spawn-row .coord-xy-val { color: var(--accent); }
 
@@ -268,11 +270,16 @@
         <button class="active" id="mode-relief" data-i18n="mode.relief">Relief</button>
         <button id="mode-elevation" data-i18n="mode.elev">Elev</button>
         <button id="mode-temperature" data-i18n="mode.temp">Temp</button>
+        <button id="mode-biomes" data-i18n="mode.biomes">Biomes</button>
         <select id="detail-size" class="size-select" title="Detail size">
           <option value="256">256</option>
           <option value="512" selected>512</option>
           <option value="1024">1024</option>
         </select>
+        <button id="ovl-rivers" data-i18n="ovl.rivers">Rivers</button>
+        <button id="ovl-wonders" data-i18n="ovl.wonders">Wonders</button>
+        <button id="btn-export" data-i18n="ovl.export">Export PNG</button>
+        <input id="noise-strength" class="noise-input" type="number" step="0.1" min="0" max="4" data-i18n-title="ovl.noise" title="biome.noise_strength">
         <span class="panel-info" id="detail-info" data-i18n="map.detail_info">click coarse to load</span>
       </div>
       <div class="nav-grid">
@@ -310,7 +317,8 @@
       "seed.placeholder": "Enter seed…", "seed.set": "Set", "seed.current": "Current",
       "seed.spawn": "Spawn",
       "filter.enable": "Enable filter", "filter.stats": "Load Stats for Sliders", "filter.hint": "Click \"Load Stats\" for ranges",
-      "mode.relief": "Relief", "mode.elev": "Elev", "mode.temp": "Temp",
+      "mode.relief": "Relief", "mode.elev": "Elev", "mode.temp": "Temp", "mode.biomes": "Biomes",
+      "ovl.rivers": "Rivers", "ovl.wonders": "Wonders", "ovl.export": "Export PNG", "ovl.noise": "biome.noise_strength (A/B)",
       "map.coarse": "Coarse Map", "map.detail": "Detail Map",
       "map.coarse_info": "click a tile", "map.detail_info": "click coarse to load",
       "map.coarse_loading": "Loading…",
@@ -337,7 +345,8 @@
       "seed.placeholder": "输入种子…", "seed.set": "设置", "seed.current": "当前",
       "seed.spawn": "出生点",
       "filter.enable": "启用过滤", "filter.stats": "加载滑块统计数据", "filter.hint": "点击「加载滑块统计数据」获取范围",
-      "mode.relief": "地形", "mode.elev": "高程", "mode.temp": "温度",
+      "mode.relief": "地形", "mode.elev": "高程", "mode.temp": "温度", "mode.biomes": "生物群系",
+      "ovl.rivers": "河流", "ovl.wonders": "奇观", "ovl.export": "导出 PNG", "ovl.noise": "生物群系噪声强度 (A/B)",
       "map.coarse": "粗图", "map.detail": "细节图",
       "map.coarse_info": "点击瓦片载入细图", "map.detail_info": "点击粗图瓦片加载",
       "map.coarse_loading": "载入中…",
@@ -367,6 +376,7 @@
     coarseData: null,
     detailRaw: null, detailCI: null, detailCJ: null,
     detailPanI: 0, detailPanJ: 0, detailMode: 'relief',
+    riversOverlay: false, wondersOverlay: false,
     lang: (() => { try { return localStorage.getItem('td-lang') || (navigator.language.startsWith('zh') ? 'zh' : 'en'); } catch(_) { return 'en'; } })(),
   };
 
@@ -388,6 +398,10 @@
   const spawnDisplay    = document.getElementById('spawn-display');
   const btnCopySpawn    = document.getElementById('btn-copy-spawn');
   const detailSizeSel   = document.getElementById('detail-size');
+  const ovlRivers       = document.getElementById('ovl-rivers');
+  const ovlWonders      = document.getElementById('ovl-wonders');
+  const btnExport       = document.getElementById('btn-export');
+  const noiseStrength   = document.getElementById('noise-strength');
   const channelButtons  = document.getElementById('channel-buttons');
   const filterEnable    = document.getElementById('filter-enable');
   const filterChannels  = document.getElementById('filter-channels');
@@ -600,8 +614,11 @@
   }
 
   function detailUrl() {
-    const { seed, detailCI: ci, detailCJ: cj, detailPanI: pi, detailPanJ: pj, detailMode: m } = state;
-    return `/api/detail.png?ci=${ci}&cj=${cj}&detail_size=${DETAIL_SIZE}&pan_i=${pi}&pan_j=${pj}&mode=${m}&_s=${seed}`;
+    const { seed, detailCI: ci, detailCJ: cj, detailPanI: pi, detailPanJ: pj, detailMode: m, riversOverlay, wondersOverlay } = state;
+    let u = `/api/detail.png?ci=${ci}&cj=${cj}&detail_size=${DETAIL_SIZE}&pan_i=${pi}&pan_j=${pj}&mode=${m}&_s=${seed}`;
+    if (riversOverlay) u += '&rivers=1';
+    if (wondersOverlay) u += '&wonders=1';
+    return u;
   }
 
   function loadCoarse() {
@@ -777,13 +794,46 @@
     });
   }
 
-  ['relief','elevation','temperature'].forEach(mode => {
-    const modeKey = mode === 'relief' ? 'mode.relief' : (mode === 'elevation' ? 'mode.elev' : 'mode.temp');
+  const DETAIL_MODES = ['relief','elevation','temperature','biomes'];
+  DETAIL_MODES.forEach(mode => {
     document.getElementById(`mode-${mode}`).addEventListener('click', () => {
       state.detailMode = mode;
-      ['relief','elevation','temperature'].forEach(m => document.getElementById(`mode-${m}`).classList.toggle('active', m === mode));
+      DETAIL_MODES.forEach(m => document.getElementById(`mode-${m}`).classList.toggle('active', m === mode));
       loadDetail();
     });
+  });
+
+  function makeOverlayToggle(btn, key) {
+    btn.addEventListener('click', () => {
+      state[key] = !state[key];
+      btn.classList.toggle('active', state[key]);
+      loadDetail();
+    });
+  }
+  makeOverlayToggle(ovlRivers, 'riversOverlay');
+  makeOverlayToggle(ovlWonders, 'wondersOverlay');
+
+  btnExport.addEventListener('click', async () => {
+    if (state.detailCI === null) return;
+    try {
+      const r = await fetch(detailUrl());
+      if (!r.ok) return;
+      const blob = await r.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `td_${state.seed}_${state.detailCI}_${state.detailCJ}_${DETAIL_SIZE}.png`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch(_) {}
+  });
+
+  noiseStrength.addEventListener('change', async () => {
+    const v = noiseStrength.value.trim();
+    const body = v === '' ? { biome_noise_strength: null } : { biome_noise_strength: parseFloat(v) };
+    try {
+      await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      loadDetail();
+    } catch(_) {}
   });
 
   btnSetSeed.addEventListener('click', async () => {

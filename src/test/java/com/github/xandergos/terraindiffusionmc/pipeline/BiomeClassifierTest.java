@@ -122,7 +122,7 @@ class BiomeClassifierTest {
         System.arraycopy(pCV, 0, climate, 27, 9);
 
         short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, H, W, pixelSizeM);
-        assertEquals(BiomeClassifier.FOREST, biomes[4]);
+        assertEquals(BiomeClassifier.DARK_FOREST, biomes[4]);
     }
 
     @Test
@@ -147,7 +147,7 @@ class BiomeClassifierTest {
 
         short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, H, W, pixelSizeM, riverMask);
         assertEquals(BiomeClassifier.RIVER, biomes[4]);
-        assertEquals(BiomeClassifier.FOREST, biomes[0]);
+        assertEquals(BiomeClassifier.DARK_FOREST, biomes[0]);
     }
 
     @Test
@@ -177,5 +177,79 @@ class BiomeClassifierTest {
         assertNotEquals(BiomeClassifier.WARM_OCEAN, biomes[0]);
         assertNotEquals(BiomeClassifier.COLD_OCEAN, biomes[0]);
         assertNotEquals(BiomeClassifier.FROZEN_OCEAN, biomes[0]);
+    }
+
+    @Test
+    void meadowInSemiAridTemperateUpland() {
+        float pixelSizeM = 90f;
+        // Upland (300m), temperate (15°C), semi-arid -> meadow (not grove/plains).
+        float[] elev = {300};
+        float[] elevPadded = {300,300,300, 300,300,300, 300,300,300};
+        float[] climate = {15, 100, 100, 50};
+
+        short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, 1, 1, pixelSizeM);
+        assertEquals(BiomeClassifier.MEADOW, biomes[0]);
+    }
+
+    @Test
+    void savannaKeptOnMediumSlope() {
+        float pixelSizeM = 100f;
+        // Warm (22°C) + sparse trees on a medium slope must stay savanna,
+        // not fall through to a cold biome (regression for the !slopeMedium guard).
+        // Sobel gradient 65 m/pixel -> slope 0.65 (medium band).
+        float[] elev = {65};
+        float[] elevPadded = {0,65,130, 0,65,130, 0,65,130};
+        float[] climate = {22, 100, 566, 50};
+
+        short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, 1, 1, pixelSizeM);
+        assertEquals(BiomeClassifier.SAVANNA, biomes[0]);
+    }
+
+    @Test
+    void savannaPlateauInWarmUpland() {
+        float pixelSizeM = 90f;
+        // Warm (22°C) + sparse trees on upland (300m) -> savanna plateau.
+        float[] elev = {300};
+        float[] elevPadded = {300,300,300, 300,300,300, 300,300,300};
+        float[] climate = {22, 100, 566, 50};
+
+        short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, 1, 1, pixelSizeM);
+        assertEquals(BiomeClassifier.SAVANNA_PLATEAU, biomes[0]);
+    }
+
+    @Test
+    void mangroveSwampInHotWetLowland() {
+        float pixelSizeM = 90f;
+        // Hot (30°C) + very wet lowland (50m) -> mangrove swamp (dense or rainforest band).
+        float[] elev = {50};
+        float[] elevPadded = {50,50,50, 50,50,50, 50,50,50};
+        float[] climate = {30, 100, 2200, 50};
+
+        short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, 1, 1, pixelSizeM);
+        assertEquals(BiomeClassifier.MANGROVE_SWAMP, biomes[0]);
+    }
+
+    @Test
+    void birchForestInTemperate() {
+        float pixelSizeM = 90f;
+        // Temperate (15°C) + moderate moisture (forest band) -> birch forest.
+        float[] elev = {50};
+        float[] elevPadded = {50,50,50, 50,50,50, 50,50,50};
+        float[] climate = {15, 100, 634, 50};
+
+        short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, 1, 1, pixelSizeM);
+        assertEquals(BiomeClassifier.BIRCH_FOREST, biomes[0]);
+    }
+
+    @Test
+    void darkForestInTemperateLowland() {
+        float pixelSizeM = 90f;
+        // Temperate (15°C) + dense moisture on lowland (50m) -> dark forest.
+        float[] elev = {50};
+        float[] elevPadded = {50,50,50, 50,50,50, 50,50,50};
+        float[] climate = {15, 100, 1015, 50};
+
+        short[] biomes = BiomeClassifier.classify(elev, climate, 0, 0, elevPadded, 1, 1, pixelSizeM);
+        assertEquals(BiomeClassifier.DARK_FOREST, biomes[0]);
     }
 }

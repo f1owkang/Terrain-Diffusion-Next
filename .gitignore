@@ -125,3 +125,6 @@ bin/
 .vscode/
 libs/
 .playwright-mcp/
+
+# Local development docs (not committed)
+ROADMAP.md

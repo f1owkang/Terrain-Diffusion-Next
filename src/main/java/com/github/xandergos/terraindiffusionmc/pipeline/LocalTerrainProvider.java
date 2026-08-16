@@ -60,6 +60,28 @@ public final class LocalTerrainProvider {
         }
     }
 
+    /** Explorer detail data: elevation, climate, biome ids and river/wonder overlay masks. */
+    public static final class PipelineData {
+        public final float[] elev;
+        public final float[] climate;
+        public final boolean[] riverMask;
+        public final boolean[] wonderMask;
+        public final short[] biomeIds;
+        public final int width;
+        public final int height;
+
+        public PipelineData(float[] elev, float[] climate, boolean[] riverMask, boolean[] wonderMask,
+                            short[] biomeIds, int width, int height) {
+            this.elev = elev;
+            this.climate = climate;
+            this.riverMask = riverMask;
+            this.wonderMask = wonderMask;
+            this.biomeIds = biomeIds;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
     private static record CacheKey(int i1, int j1, int i2, int j2) {}
     private static record CacheEntry(HeightmapData data, AtomicLong lastAccessed) {}
 
@@ -132,31 +154,39 @@ public final class LocalTerrainProvider {
     }
 
     /**
-     * Run elevation and climate inference on the inference thread.
-     *
-     * @return float[2]: [0] = elev (H*W), [1] = climate (5*H*W, or null)
+     * Run elevation and climate inference on the inference thread, plus the river
+     * and wonder overlays, returning a {@link PipelineData} with the overlay masks.
      */
-    public static float[][] getPipelineData(int i1, int j1, int i2, int j2, boolean withClimate) throws Exception {
+    public static PipelineData getPipelineData(int i1, int j1, int i2, int j2, boolean withClimate) throws Exception {
         return submitToInferenceThread(() -> {
             float[][] data = getInstance().pipeline.get(i1, j1, i2, j2, withClimate);
-            if (data != null && data.length > 0 && data[0] != null) {
-                int H = i2 - i1, W = j2 - j1;
-                float[] elev = data[0];
-                float[] climate = (withClimate && data.length > 1) ? data[1] : null;
-
-                TerrainShaping.apply(elev, i1, j1, H, W, NATIVE_RESOLUTION);
-
-                if (climate != null) {
-                    // BiomeClassifier needs a (H+2)x(W+2) padded elevation for its coastal
-                    // neighbourhood check; build it by edge-clamping the fetched region.
-                    float[] elevPadded = padElevation(elev, H, W);
-                    short[] gating = BiomeClassifier.classify(elev, climate, i1, j1, elevPadded, H, W, NATIVE_RESOLUTION);
-                    WonderGenerator.apply(elev, gating, i1, j1, H, W, NATIVE_RESOLUTION, getSeed());
-                }
-
-                carveRivers(elev, i1, j1, H, W, NATIVE_RESOLUTION);
+            if (data == null || data.length == 0 || data[0] == null) {
+                return new PipelineData(null, null, null, null, null, 0, 0);
             }
-            return data;
+            int H = i2 - i1, W = j2 - j1;
+            float[] elev = data[0];
+            float[] climate = (withClimate && data.length > 1) ? data[1] : null;
+
+            TerrainShaping.apply(elev, i1, j1, H, W, NATIVE_RESOLUTION);
+
+            boolean[] wonderMask = null;
+            if (climate != null) {
+                // BiomeClassifier needs a (H+2)x(W+2) padded elevation for its coastal
+                // neighbourhood check; build it by edge-clamping the fetched region.
+                float[] elevPadded = padElevation(elev, H, W);
+                short[] gating = BiomeClassifier.classify(elev, climate, i1, j1, elevPadded, H, W, NATIVE_RESOLUTION);
+                wonderMask = WonderGenerator.apply(elev, gating, i1, j1, H, W, NATIVE_RESOLUTION, getSeed());
+            }
+
+            boolean[] riverMask = carveRivers(elev, i1, j1, H, W, NATIVE_RESOLUTION);
+
+            short[] biomeIds = null;
+            if (climate != null) {
+                float[] elevPadded = padElevation(elev, H, W);
+                biomeIds = BiomeClassifier.classify(elev, climate, i1, j1, elevPadded, H, W, NATIVE_RESOLUTION, riverMask);
+            }
+
+            return new PipelineData(elev, climate, riverMask, wonderMask, biomeIds, W, H);
         });
     }
 

@@ -44,6 +44,8 @@ public final class BiomeClassifier {
     static final short FROZEN_RIVER = 11;
     static final short CUSTOM_GROVE = 120;
     static final short FOREST_SPARSE = 108, TAIGA_SPARSE = 115, SNOWY_TAIGA_SPARSE = 116;
+    static final short MANGROVE_SWAMP = 38, SAVANNA_PLATEAU = 18;
+    static final short DARK_FOREST = 28, BIRCH_FOREST = 30;
 
     /**
      * Classify biomes for a grid of pixels.
@@ -214,7 +216,7 @@ public final class BiomeClassifier {
                         biome = hasSnow ? FROZEN_PEAKS : STONY_PEAKS;
                     } else if (hasSnow) {
                         if (treesNone) biome = SNOWY_SLOPES;
-                        else if (treesSparse || treesForest) biome = SNOWY_TAIGA_SPARSE;
+                        else if (treesSparse || treesForest) biome = GROVE;
                         else biome = SNOWY_TAIGA;
                     } else if (treesNone) {
                         if (barren) biome = WINDSWEPT_HILLS;
@@ -234,22 +236,28 @@ public final class BiomeClassifier {
                     } else if (treesNone) {
                         if (hot && !lowland && treeMoisture < 0.35f) biome = BADLANDS; // arid upland mesas
                         else if (warm || hot) biome = DESERT;
+                        else if (!lowland && (cool || temperate) && treeMoisture >= 0.05f) biome = MEADOW; // semi-arid temperate/cool highland grassland
                         else if (barren && !lowland && (cold || cool || temperate)) biome = CUSTOM_GROVE;
                         else if (treeMoisture < 0.35f || precip < 350f) biome = CUSTOM_GROVE;
                         else biome = PLAINS;
                     } else if (treesSparse || treesForest) {
                         if (hot) biome = JUNGLE;
-                        else if (warm && treesSparse && !slopeMedium) biome = SAVANNA;
+                        else if (warm && treesSparse && !lowland) biome = SAVANNA_PLATEAU;
+                        else if (warm && treesSparse) biome = SAVANNA;
                         else if (warm && treesForest) biome = FOREST_SPARSE;
+                        else if (temperate && treesForest) biome = BIRCH_FOREST;
                         else if (temperate) biome = FOREST_SPARSE;
                         else biome = TAIGA_SPARSE;
                     } else if (treesDense) {
-                        if (hot) biome = JUNGLE;
+                        if (hot && lowland) biome = MANGROVE_SWAMP;
+                        else if (hot) biome = JUNGLE;
                         else if (warm && lowland) biome = SWAMP;
                         else if (cool || cold) biome = TAIGA;
+                        else if (temperate && lowland) biome = DARK_FOREST;
                         else biome = FOREST;
                     } else { // rainforest
-                        if (hot || (warm && temp >= 18f && tStd < 5f)) biome = JUNGLE;
+                        if (hot && lowland) biome = MANGROVE_SWAMP;
+                        else if (hot || (warm && temp >= 18f && tStd < 5f)) biome = JUNGLE;
                         else if (lowland) biome = SWAMP;
                         else if (cool || cold) biome = TAIGA;
                         else biome = FOREST;
@@ -287,6 +295,7 @@ public final class BiomeClassifier {
         if (!TerrainDiffusionConfig.biomeSmoothingEnabled()) return;
         short[] smoothed = out.clone();
         int PW = W + 2;
+        int[] votes = new int[256];
         for (int r = 0; r < H; r++) {
             for (int c = 0; c < W; c++) {
                 int idx = r * W + c;
@@ -305,7 +314,7 @@ public final class BiomeClassifier {
                 }
                 if (coastal) continue;
 
-                int[] votes = new int[256];
+                java.util.Arrays.fill(votes, 0);
                 int total = 0;
                 for (int dr = -1; dr <= 1; dr++) {
                     for (int dc = -1; dc <= 1; dc++) {
